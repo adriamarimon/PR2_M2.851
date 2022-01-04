@@ -1,0 +1,530 @@
+---
+title: "M2.851 - Tipología y ciclo de vida de los datos. Práctica 2"
+author: "Gustavo Álvarez Bea y Adrià Marimon Robert"
+date: "`r format(Sys.Date())`"
+output:
+  word_document:
+    toc: yes
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_libraries, include=FALSE}
+library(knitr)
+library(VIM)
+library(class)
+library(ggplot2)
+library(lawstat)
+library(yaml)
+```
+
+
+
+# 1. Descripción del dataset
+
+1.1 Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende
+responder?
+
+El conjunto de datos se denomina "winequality-red" y contiene 1.599 observaciones de
+variantes tintas del vino portugués "Vinho Verde". Se obtiene a partir del siguiente
+dataset de Kaggle: https://www.kaggle.com/uciml/red-wine-quality-cortez-et-al-2009.
+
+En el apartado de descripción del proyecto mencionado, se indica, a su vez, que
+los datos originales han sido descargados del UCI Machine Learning Repository, 
+de la UC Irvine: https://archive.ics.uci.edu/ml/datasets/wine+quality. El dataset
+fue creado por Paulo Cortez, Antonio Cerdeira, Fernando Almeida, Telmo Matos y 
+Jose Reis. 
+
+Se distribuye como fichero de tipo CSV, separado por comas. Se procede
+a su carga en el proyecto.
+
+El dataset puede ser de importancia para una persona que 
+se inicia en el mundo del vino puede ser relevante a la hora de producirlo.
+
+
+```{r chunck11}
+# Carga del archivo
+
+wine <- read.csv("winequality-red.csv", header=TRUE)
+wine1<-wine
+wine_raw<-wine
+
+```
+
+Está compuesto por 11 variables fisicoquímicas (entradas) y una sensorial (salida),
+con tipo de datos numérico decimal las 11 primeras y entero la última.
+
+```{r chunck12}
+# Examen del tipo de datos de cada variable
+str(wine)
+```
+
+La descripción de las 11 variables de entrada es la siguiente:
+
+* fixed acidity: acidez fija. Conjunto de ácidos naturales del vino, que permiten
+conservar sus cualidades naturales. El más importante es el ácido tártico, pero
+también inciden los ácidos málico, cítrico, succínico y láctico (Agrovin, 2020).
+* volatile acidity: acidez volátil. Un vino de calidad acostumbra a manifestar 
+una volatilidad de ácidos baja (Vinetur, 2019). 
+* citric acid: ácido cítrico, presente en la acidez fija.
+* residual sugar: azúcar residual. Cantidad de azúcar que queda en el vino que
+no ha sido fermentada por las levaduras y que determina si un vino es seco,
+semiseco, semidule o dulce (Catatu, 2018).
+* chlorides: cloruros. Forman parte de las sales minerales del vino (Vinetur, 2015).
+* free sulfur dioxide: dióxido de azufre libre, disuelto en el líquido.
+* total sulfur dioxide: dióxido de azufre total, como suma de la parte libre y
+el combinado en las sustancias orgánicas presentes en el vino. Su finalidad
+es la conservación y la eliminación de bacterias, al aportar funciones antioxidantes
+y garantizar la estabilidad microbiana del vino. Al oxidarse ante los fenoles
+presentes en el vino, genera los conocidos sulfitos, y su concentración está
+sujeta a regulación, por su posible reacción adversa en el consumidor (Carlos
+Serres, 2017).
+* density: densidad. Determina la estructura o espesor en boca del vino.
+* pH: pH. Resulta del equilibrio de los ácidos que componen un vino (Lucas Díaz,
+2015).
+* sulphates: sulfatos. Derivados de los tratamientos aplicados a la viña ante
+enfermedades como el mildium (siendo el más conocido el sulfato de cobre), y como
+antireductivos y aportes nutritivos en la fermentación alcohólica (como el 
+sulfato de amonio) (Nieto Pardal, 2014).
+* alcohol: alcohol. Porcentaje de alcohol presente en el vino. De media, un vino
+está compuesto por un 85% de agua, entre un 10% y un 15% de alcohol y, en menor
+medida, por el resto de sustancias nutritivas, minerales y esenciales (Vinetur,
+2015).
+
+Y la variable de salida es la siguiente:
+
+* quality: calidad del vino, en un rango de 3 a 8 puntos.
+
+Con el dataset se pretende entender la calidad de un vino como resultado del análisis
+de las variables fisicoquímicas de entrada arriba indicadas. La respuesta es 
+trascendente ya que, si se alcanza un modelo capaz de predecir la calidad de un 
+vino, en función de parámetros fácilmente observables y medibles desde un punto
+de vista técnico, podrían modificarse las producciones con el fin de conseguir
+mejores caldos, lo que redundaría en mayores ventas y, consecuentemente, en un
+mayor beneficio. La industria del vino tiene gran importancia en países de 
+dilatada tradición vitivinícola, como España o Portugal. En el caso español,
+de la industria del vino dependen más de 400.000 puestos de trabajo, lo que supone
+un 2,4% del total del empleo y, como sector, genera 24.000 millones de euros anuales
+(Vinetur, 2020).
+
+
+# 2. Integración y selección de los datos de interés a analizar
+
+Debido a que el dataset era un dataset de muestra no ha necesitado de la integración de los datos.
+
+```{r chunck21}
+
+```
+
+Como era de esperar, existe una fuerte relación entre la acidez fija y el
+ácido cítrico (presente en la misma), con una correlación de 0,67, e incluso
+entre este último y la acidez volátil, con una correlación de 0,55. 
+
+```{r chunck22}
+
+```
+
+Tambien se aprecia similar relación entre la acidez fija con la densidad y con 
+el pH, correlaciones de 0.67 y 0.68 respectivamente. El ácido cítrico también 
+guarda relación con el pH, con un valor de 0.54.
+
+En otro orden de cosas, y también como sería previsto, existe una clara relación
+entre dióxido de azufre libre y el dióxido de azufre total, con una correlación
+de 0.68.
+
+En conclusión, y una primera valoración, se observan dos grupos de variables
+claramente relacionadas conceptual y cuantitativamente:
+
+* acidez fija, acidez volátil, ácido cítrico, densidad y pH
+* dióxido de azufre libre y dióxido de azufre total
+
+Se aprecia también cierto patrón regular, en este caso inverso, entre la densidad
+y el alcohol, con una correlación negativa de -0.5. Y como conclusión de interés
+de cara al resultado final del análisis, se observa relación entre el alcohol y
+la valoración final de la calidad, con una correlación de 0.48.
+
+Como punto de partida, no se descarta ninguna de las 11 variables de entrada.
+
+Se crea una nueva variable dicotómica _quality_cat_ a partir de la variable
+_quality_, con los siguientes rangos:
+
+* [3-6]: "0" [1]
+* [7-8]: "1" [2]
+
+```{r chunck23}
+wine[wine$quality <= 6, "quality_cat"] <- 0
+wine[wine$quality > 6, "quality_cat"] <- 1
+wine$quality_cat <- factor(wine$quality_cat)
+wine$quality_cat <- relevel(wine$quality_cat, ref="1")
+```
+
+En función de los modelos alcanzados, se podría evaluar crear otra variable
+dicotómica a paritr del azúcar residual, clasificando los vinos en:
+
+* Seco: < 4 
+* Semiseco: [4-30]
+
+# 3. Limpieza de los datos
+
+
+## 3.1. Ceros o elementos vacíos
+
+No existen observaciones con elementos vacíos.
+
+```{r chunck311}
+# Valores perdidos
+print(paste("Registros NA:", sum(is.na(wine))))
+```
+
+Sólo la variable _citric acid_ contiene valores a cero [0], en un total de 132
+observaciones. 
+
+```{r chunck312}
+# Observaciones con [citric acid]==0
+print(paste("Registros [citric acid]==0:", sum(wine$citric.acid==0)))
+hist(wine$citric.acid)
+```
+
+Teniendo en cuenta que, en dicha variable, el primer valor con datos distintos
+a cero es 0,01, y que la variable presenta valores en el rango [0-1], se dan por
+válidas todas las observaciones.
+
+
+
+## 3.2. Identificación y tratamiento de valores extremos
+
+Se obtiene un valor resumen de los datos.
+
+```{r chunck320}
+# Valores resumen de cada tipo de variable
+summary(wine1)
+```
+
+Para identificar los valores extremos primero de todo graficaremos en un diagrama de caja todas las variables.
+
+```{r chunck321}
+library(purrr)
+# install.packages("tidyr")
+library(tidyr)
+wine %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_boxplot()
+
+```
+Vemos que el dataset puede presentar outliers a nivel visual en las siguientes variables.
+Como no tenemos suficiente conociemiento del mundo del vino para identificar los outliers, nos basaremos en los valores que estén 1,5 por encima o por debajo del IQR.
+
+
+```{r chunck322}
+
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 1.5 * IQR(x) | 
+           x > quantile(x, 0.75) + 1.5 * IQR(x))
+}
+outlier <- data.frame(variable = character(), 
+                      sum_outliers = integer(),
+                      stringsAsFactors=FALSE)
+for (j in 1:(length(wine)-1)){
+  variable <- colnames(wine[j])
+  for (i in wine1[j]){
+    sum_outliers <- sum(is_outlier(i))
+  }
+  row <- data.frame(variable,sum_outliers)
+  outlier <- rbind(outlier, row)
+}
+outlier
+
+```
+Tal y como vemos en la tabla anteriormente mostrada vemos que nuestros datos pueden presentar ouliers.
+
+Sin embargo entendemos que si las mediciones de las variables se han hecho de la misma y utilizando los mismos medidores seguramente los outliers se deberán a que hay vinos con características únicas, por lo que solo consideraremos como potenciales outliers aquellos valores de las variables que tengan más de un 4% de valores extremos.
+
+
+
+```{r chunk323}
+
+for (i in 1:nrow(outlier)){
+  if (outlier[i,2]/nrow(wine) * 100 >= 4){
+    print(paste(outlier[i,1], 
+                '=', 
+                round(outlier[i,2]/nrow(wine) * 100, digits = 2),
+                '%'))
+  }
+}
+
+```
+En este caso serán en las variables: 
+residual.sugar y chlorides, sin embargo despues de consultar en internet los posibles valores de estas dos variables vemos que pueden ser coherentes y se debe más a que la muestra de vinos es muy distinta entre sí. Por ejemplo el residual sugar puede presentar todos los valores de la muestra dependiendo del tipo de vino. No son valores extremos sino valores que se presentan en menor medida.
+
+Despues de este apartado ya tendríamos listo el Dataset para analizarlo.
+
+# 4. Análisis de los datos
+
+
+## 4.1. Selección de los grupos de datos que se quieren analizar/comparar
+
+
+```{r chunck41}
+
+```
+
+
+## 4.2. Comprobación de la normalidad y homogeneidad de la varianza
+
+Primero de todo realizaremos el estudio de normalidad de las variables mediante el test de normalidad de Shapiro-Wilk por cada uno de los atributos.
+Plantearemos el siguiente test de hipotesis:
+  H0 la muestra sigue una distribució Normal
+  H1 la muestra NO sigue una destribución Normal.
+```{r chunck421}
+
+c<-names(wine1)
+for (i in 1:ncol(wine1))
+{
+  cat("Atribut '",c[i],"', ", sep = '')
+  pvalor <- shapiro.test(wine[, i])[["p.value"]]
+  cat("p-valor '", pvalor,"'\n", sep = '')
+  
+}
+```
+Podemos observar por el valor p y las hipotesis que hemos planteado que los valores de los atributos del dataset NO siguen una distribución normal. No obstante cuando el número de observaciónes es grande y debido al teorema del límite central, se podrán utilizar pruebas paramétricas. Así las variables se podrían aproximar a una distribución normal de media 0 y de desviación estándard 1.
+
+Homoscedasticitat:
+  H0: Las variancias poblacionales son iguales, homoscedasticidad
+  H1: Las variancias poblacionales son diferentes, heteroscedasticidad
+```{r chunck422}
+library("car")
+leveneTest(wine$alcohol,wine$quality)
+```
+
+Como que le pvalue es<que el nivel de significación  no podemos rechazar la hipotesiss nula H0, por lo tanto podemos afirmar que hay homoscedasticitat.
+
+## 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos
+
+
+4.3.1 Queremos responder a la pregunta, qué variables tienen una correlación superior con la calidad del vino?
+        Para contestar a esta pregunta procederemos a realizar un análisis de correlación entre las distintas variables. 
+        
+En primer lugar se analizarán las correlaciones entre los distintos atributos del dataset
+```{r chunck431}
+library(corrplot)
+correlation<-cor(wine1)
+corrplot(correlation,type="upper", tl.srt=45, number.cex = 0.5, tl.col = "black", method="number")
+
+plot(wine$fixed.acidity, wine$citric.acid, pch=20, col="blue", xlab="Acidez fija",
+ylab="Ácido cítrico", main="Diagrama de dispersión")
+```
+
+
+Se observa que:
+  Se observa que la variable alcohol es la que presenta una correlación más alta con la calidad del vino.
+  Tambien nos gustaría distactar que existe una fuerte relación entre la acidez fija y el ácido cítrico (presente en la misma), con una correlación de 0,67, e incluso entre este último y la acidez volátil, con una correlación de 0,55.
+
+4.3.2
+Para nuestra segunda prueba estadística intentaremos saber si un vino tiene mayor puntuación en función si es seco o semiseco.
+Primero de todo crearemos una nueva variable que nos indicará si un vino es seco o semiseco siguiendo los siguientes criterios:
+
+* Seco: < 4 
+* Semiseco: [4-30]
+Queremos responder a la pregunta de: 
+¿La calidad del vino varia en caso de ser seco o semiseco?
+H0 : mu1=mu2
+H1 : mu1<>mu2
+Debido a la teoria del límite central podemos asumir normalidad debido a que n>30
+
+```{r chunck432}
+wine[wine$residual.sugar  < 4, "seco"] <- "Seco"
+wine[wine$residual.sugar  >= 4, "seco"] <- "Semiseco"
+
+wine_seco_calidad<-wine[wine$seco=="Seco",]$quality
+wine_semiseco_calidad<-wine[wine$seco=="Semiseco",]$quality
+
+t.test(wine_seco_calidad,wine_semiseco_calidad, alternative="two.sided")
+
+boxplot(wine_seco_calidad,wine_semiseco_calidad,names=c("Seco","Semiseco"))
+medias <- c(mean(wine_seco_calidad),mean(wine_semiseco_calidad))
+points(medias,pch=18,col="red")
+```
+
+Debido a que el pvalue es superior a 0,05 no podemos rechazar la hipotesis nula, por lo que el hecho de ser seco, semiseco no afecta a la calidad percibida por el usuario.
+
+4.3.3 Para nuestra última prueba estadística realizaremos tres modelos predecir la calidad del vino en funcion de las variables del dataset.
+Usaremos los siguientes métodos:
+Regresión lineal
+RandomForest
+LogisticRegresion:
+
+Preparamos los subsets de train y test para los algoritmos RandomForest y LogisticRegresion.
+```{r chunck4330}
+library(randomForest)
+set.seed(1234)
+samp <- sample(nrow(wine), 0.6 * nrow(wine))
+train <- wine[samp, ]
+test <- wine[-samp, ]
+
+```
+
+
+4.3.2.3
+
+```{r chunck4331}
+
+model_lm <- lm(quality ~. , data=wine_raw)
+summary(model_lm)
+```
+Vemos que la precisión de la regresión lineal no es para nada ideal, la R adjusted es de 0,36.
+
+Por este motivo vamos a realizar dos modelos a partir de los datos para predecir la calidad del vino usando los algoritmo RandomForest y una regresion logística.
+
+Primero de todo separaremos nuestro datos entre el dataset de prueba y el de test.
+Dividiremos el dataset entre 60% prueba y 40% test.
+Acto seguido construiremos el modelo, con el ntree por defecto, 500.
+
+Acto seguido mostraremos la matriz que nos enseña la predicción vs los valores reales (matriz de confusión) y calcularemos el accuracy del modelo.
+```{r chunck4332}
+model <- randomForest(quality_cat ~ fixed.acidity + volatile.acidity + citric.acid +  chlorides + free.sulfur.dioxide + total.sulfur.dioxide +    density + pH + sulphates + alcohol, data = train, ntree=1500)
+model
+tst_pred <- predict(model, newdata = test, type = "response")
+tst_tab <- table(predicted = tst_pred, actual = test$quality_cat)
+tst_tab
+
+pred <- predict(model, newdata = test)
+sum(diag(tst_tab))/length(train$quality_cat)
+
+```
+
+Podemos apreciar que el modelo cuando lo utilizamos en el set de test nos da un accuracy del 0,59 más alto que la regresión lineal pero no sería suficiente para aceptarlo como modelo nos permita predecir con un alto grado de acierto.
+```{r chunck4333}
+model_glm <- glm(quality_cat ~ fixed.acidity + volatile.acidity + citric.acid +  chlorides + free.sulfur.dioxide + total.sulfur.dioxide +    density + pH + sulphates + alcohol, data = train, family=binomial(link = "logit"))
+model_glm
+
+tst_pred <- ifelse(predict(model_glm, newdata = test, type = "response") > 0.5, "Good Wine", "Bad Wine")
+tst_tab <- table(predicted = tst_pred, actual = test$quality_cat)
+tst_tab
+
+sum(diag(tst_tab))/length(train$quality_cat)
+
+
+```
+Al igual que usando el algoritmo randomForest no vemos que sea un modelo lo suficientemente bueno para aceptarlo
+Vemos que la accuracy del modelo random forest es de aproximadamente un 60%, mientras que la de la regresión logística es de 59%, por lo que no podríamos categorizar a ambos de buen modelo, sin embargo el error que presentan es menor que el modelo de regresión lineal.
+
+# 5. Representación de los resultados a partir de tablas y gráficas
+Acto seguido vamos a representar las gráficas y tablas más relevantes que hemos ido viendo a lo largo de la práctica y alguna más que consideramos de interés:
+Matriz de correlación:
+```{r chunck51}
+correlation<-cor(wine1)
+corrplot(correlation,type="upper", tl.srt=45, number.cex = 0.5, tl.col = "black", method="number")
+```
+
+Boxplot de las variables :
+```{r chunck52}
+wine %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_boxplot()
+```
+
+Histograma de las variables:
+```{r chunk53}
+wine_raw %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+
+
+# 6. Resolución del problema
+
+Se exporta el dataset tratado, con el nombre _winequality-red-FINAL.csv_. 
+
+```{r chunck6}
+# Exportación del dataset
+write.csv(wine, file = "winequality-red-FINAL.csv")
+```
+
+Como conclusión si analizamos el dataset vemos que a nivel de datos es un dataset
+muy pulido y no hemos tenido que realizar grandes tareas de limpieza de datos; 
+los modelos que se han desarrollado no son adecuados para predecir si un vino será bueno o malo.
+
+EL problema del dataset en nuestra opinión, peca en origen de cierta ingenuidad. 
+Reducido a la máxima expresión, se pretende conocer la calidad de un vino en base a 7 parámetros
+principales: acidez, azúcar, salinidad, sulfitos, densidad, sulfatos y alcohol.
+Pero el vino es mucho más que esto y la complejidad de la técnica enológica,
+y la correspondiente subjetividad de cada paladar, hacen que la definición
+de calidad se escape de una simple mezcla y concentración de elementos esenciales.
+Sin embargo, el dataset sí puede ser un buen punto de partida para ayudar a 
+determinar qué características -entre otras muchas- que aparecen
+recurrentemente en los vinos de mayor prestigio y reconocimiento.
+
+
+Como conclusión, me quedo con una cita que leí al buscar documentación para 
+elaborar la práctica: la primera frase resume la conclusión de este trabajo, la
+segunda ensalza la belleza de este singular fluido:
+"El vino tiene historias. Y la historia está llena de vino" (Carlos Serres, 2020).
+Salud!
+
+
+
+
+# 7. Código
+
+El código con el que se ha realizado la limpieza, análisis y representación de 
+los datos conforma parte del presente archivo y figura adjunto en cada uno de los 
+apartados previos desarrollados.
+
+
+<br>___________________________
+
+Agrovin (2020). "10 Técnicas para corregir la acidez del vino". _Agrovin_. 
+Ciudad Real: Agrovin. [Fecha de consulta: 11 de diciembre de 2021].
+Disponible en: https://www.agrovin.com/tecnicas-para-corregir-la-acidez-del-vino/
+
+Carlos Serres (2020). "La Persona. Biografía de Carlos Serres". _Carlos Serres_.
+Haro: Bodegas Carlos Serres. [Fecha de consulta: 12 de diciembre de 2021].
+Disponible en:  https://www.carlosserres.com/carlos-serres-biografia/
+
+Carlos Serres (2017). "El dióxido de azufre y su función en los vinos". 
+_Carlos Serres_. Haro: Bodegas Carlos Serres. 
+[Fecha de consulta: 12 de diciembre de 2021].
+Disponible en: https://www.carlosserres.com/dioxido-azufre-funcion-vino/
+
+Catatu (2018). "Los Azúcares en el Vino". _Catatu_. Huelva: Catatu.
+[Fecha de consulta: 11 de diciembre de 2021]. Disponible en: 
+https://catatu.es/blog/el-azucar-en-el-vino/
+
+Nieto Pardal, Carlos (2014). "Libreta del enólogo: los sulfatos". 
+_Finca Viladellops_. Barcelona: Viladellops Vinícola. [Fecha de consulta: 
+12 de diciembre de 2021]. Disponible en: 
+https://www.fincaviladellops.com/es/libreta-del-enologo-los-sulfatos/
+
+Lucas Díaz, María (2015). "Los 6 criterios que determinan la calidad del vino". 
+_Vinopack_. Madrid: Vinopack. [Fecha de consulta: 12 de diciembre de 2021]. 
+Disponible en: https://www.vinopack.es/criterios-que-determinan-la-calidad-en-el-vino
+
+Vinetur (2020). "El sector del vino genera casi 24.000 millones de euros anuales
+para España". _Vinetur_. Santiago de Compostela: VGSC.[Fecha de consulta: 11 de
+diciembre de 2021]. Disponible en: 
+https://www.vinetur.com/2020113062600/el-sector-del-vino-genera-casi-24000-millones-de-euros-anuales-para-espana.html
+
+Vinetur (2019). "Qué es y por qué no debes comprar vino con elevado sulfuroso combinado".
+_Vinetur_. Santiago de Compostela: VGSC.[Fecha de consulta: 12 de
+diciembre de 2021]. Disponible en: 
+https://www.vinetur.com/2019012549165/que-es-y-por-que-no-debes-comprar-vino-con-elevado-sulfuroso-combinado.html
+
+Vinetur (2015). "¿Cuánta sal tiene el vino?". _Vinetur_. Santiago de Compostela:
+VGSC. [Fecha de consulta: 11 de diciembre de 2021]. Disponible en:
+https://www.vinetur.com/2015050419254/cuanta-sal-tiene-el-vino.html
